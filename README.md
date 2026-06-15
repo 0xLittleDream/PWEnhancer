@@ -1,4 +1,5 @@
-PW Enhancer
+PW Enhancer:
+
 A powerful, lightweight Chrome extension built to fix the most annoying limitations of Physics Wallah (pw.live) and supercharge your study workflow.
 
 No more black screens when taking screenshots, no more manual math to figure out how much time is left on 1.5x speed, and no more guessing how much time you actually spent studying today.
