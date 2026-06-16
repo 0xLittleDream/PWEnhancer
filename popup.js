@@ -1,19 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
     const showTrueTimeToggle = document.getElementById('show-truetime');
+    const darkModeToggle = document.getElementById('dark-mode');
     const speedDropdown = document.getElementById('speed-dropdown');
 
     // Load saved settings
     chrome.storage.sync.get({
         showTrueTime: true,
+        darkMode: false,
         customSpeed: 1.0
     }, (items) => {
         showTrueTimeToggle.checked = items.showTrueTime;
+        darkModeToggle.checked = items.darkMode;
         speedDropdown.value = items.customSpeed;
     });
 
     // Handle toggles
     showTrueTimeToggle.addEventListener('change', (e) => {
         chrome.storage.sync.set({ showTrueTime: e.target.checked });
+    });
+
+    darkModeToggle.addEventListener('change', (e) => {
+        chrome.storage.sync.set({ darkMode: e.target.checked });
     });
 
     // Handle dropdown change

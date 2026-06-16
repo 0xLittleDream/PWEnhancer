@@ -3,6 +3,7 @@ console.log("PW Enhancer: Content script loaded on " + window.location.href);
 
 let currentSettings = {
     showTrueTime: true,
+    darkMode: false,
     customSpeed: 1.0
 };
 
@@ -21,6 +22,25 @@ function updateStyles() {
     
     if (!currentSettings.showTrueTime) {
         css += '#pw-truetime-timer { display: none !important; }\n';
+    }
+    
+    const isWatchPage = window.location.href.includes('/watch') || window.location.href.includes('streamfiles.eu.org');
+    const isPwLive = window.location.hostname.includes('pw.live');
+
+    if (currentSettings.darkMode && isPwLive && !isWatchPage) {
+        css += `
+            html {
+                filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) !important;
+                background: white !important;
+            }
+            img:not([src*="logo"]):not([alt*="logo"]):not([class*="logo"]), 
+            video, canvas, iframe, picture, .pw-lightbox-btn, .pw-download-btn, [style*="background-image"] {
+                filter: invert(1) hue-rotate(180deg) !important;
+            }
+            body {
+                background: white !important;
+            }
+        `;
     }
     
     styleEl.textContent = css;
@@ -72,6 +92,7 @@ function getLectureName() {
 if (chrome && chrome.storage) {
     chrome.storage.sync.get({
         showTrueTime: true,
+        darkMode: false,
         customSpeed: 1.0
     }, (items) => {
         currentSettings = items;
@@ -82,6 +103,7 @@ if (chrome && chrome.storage) {
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'sync') {
             if (changes.showTrueTime !== undefined) currentSettings.showTrueTime = changes.showTrueTime.newValue;
+            if (changes.darkMode !== undefined) currentSettings.darkMode = changes.darkMode.newValue;
             if (changes.customSpeed !== undefined) {
                 currentSettings.customSpeed = changes.customSpeed.newValue;
                 const video = document.querySelector('video.vjs-tech');
@@ -114,7 +136,7 @@ function injectTimer() {
         return true;
     }
 
-    if (!video || !header) return false;
+    if (!video) return false;
 
     // Create container
     const timerContainer = document.createElement('div');
