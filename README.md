@@ -23,7 +23,7 @@ Break the native speed limit! Use the sleek dropdown menu in the popup to push y
 Always know exactly when a lecture will finish. The injected TrueTime Pill actively calculates and displays the *actual* real-world time remaining based on your current custom playback speed. 
 
 🌐 **Universal Compatibility**
-The extension now natively supports both **Chrome** and **Firefox** right out of the box! We've also added built-in support for embedded PW videos playing on `streamfiles.eu.org`.
+The extension now natively supports both **Chrome** and **Firefox** right out of the box.
 
 ### 🛠️ Installation
 1. Download the `TruetimeExtension.zip` file below.
