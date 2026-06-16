@@ -34,6 +34,16 @@ function formatTime(seconds) {
     return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
 }
 
+function formatFinishTime(date) {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+    return `${hours}:${minutesStr} ${ampm}`;
+}
+
 function applyCustomSpeed(video) {
     if (!video) return;
     if (currentSettings.customSpeed) {
@@ -259,6 +269,7 @@ function injectTimer() {
     const showPill = () => {
         timerContainer.style.opacity = '1';
         timerContainer.style.visibility = 'visible';
+        document.body.classList.remove('pw-hide-cursor');
 
         clearTimeout(hideTimerTimeout);
         
@@ -267,6 +278,7 @@ function injectTimer() {
         hideTimerTimeout = setTimeout(() => {
             timerContainer.style.opacity = '0';
             timerContainer.style.visibility = 'hidden';
+            document.body.classList.add('pw-hide-cursor');
         }, 2500);
     };
 
@@ -277,12 +289,14 @@ function injectTimer() {
         clearTimeout(hideTimerTimeout);
         timerContainer.style.opacity = '0';
         timerContainer.style.visibility = 'hidden';
+        document.body.classList.add('pw-hide-cursor');
     });
 
     timerContainer.addEventListener('mouseenter', () => {
         clearTimeout(hideTimerTimeout);
         timerContainer.style.opacity = '1';
         timerContainer.style.visibility = 'visible';
+        document.body.classList.remove('pw-hide-cursor');
     });
     timerContainer.addEventListener('mouseleave', showPill);
 
@@ -309,7 +323,10 @@ function injectTimer() {
         const playbackRate = video.playbackRate || 1;
         const trueRemainingSeconds = remainingSeconds / playbackRate;
         
-        timeText.textContent = `True Time Left: ${formatTime(trueRemainingSeconds)}`;
+        const finishDate = new Date(Date.now() + trueRemainingSeconds * 1000);
+        const finishTimeStr = formatFinishTime(finishDate);
+        
+        timeText.textContent = `True Time Left: ${formatTime(trueRemainingSeconds)} (Finish on ${finishTimeStr})`;
         speedLabel.textContent = playbackRate.toFixed(2) + 'x';
         currentSettings.customSpeed = playbackRate;
     };
