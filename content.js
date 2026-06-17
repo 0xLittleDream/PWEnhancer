@@ -149,7 +149,8 @@ if (chrome && chrome.storage) {
         showTrueTime: true,
         darkMode: false,
         skipSilence: false,
-        customSpeed: 1.0
+        customSpeed: 1.0,
+        skipSilenceSpeed: 4.5
     }, (items) => {
         currentSettings = items;
     });
@@ -172,6 +173,9 @@ if (chrome && chrome.storage) {
                 if (window.pwUpdateJumpBtnState) {
                     window.pwUpdateJumpBtnState();
                 }
+            }
+            if (changes.skipSilenceSpeed !== undefined) {
+                currentSettings.skipSilenceSpeed = changes.skipSilenceSpeed.newValue;
             }
             if (changes.customSpeed !== undefined) {
                 currentSettings.customSpeed = changes.customSpeed.newValue;
@@ -476,7 +480,7 @@ function injectTimer() {
         newSpeed = Math.max(0.25, Math.min(4.0, newSpeed));
         currentSettings.customSpeed = newSpeed;
         video.playbackRate = newSpeed;
-        chrome.storage.local.set({ customSpeed: newSpeed });
+        chrome.storage.local.set({ customSpeed: newSpeed, soundedSpeed: newSpeed });
         speedLabel.textContent = newSpeed.toFixed(2) + 'x';
     };
 
@@ -489,12 +493,14 @@ function injectTimer() {
         
         let displayRate = video.playbackRate || 1.0;
         
-        // If jumpcutter is ON, do not let its temporary speed boosts overwrite our base Custom Speed
-        // or cause the True Time predictions to wildly fluctuate.
-        if (currentSettings.skipSilence) {
+        // If jumpcutter is ON, and it is currently applying its massive speed boost (e.g. 4.5x),
+        // do not let it corrupt our base Custom Speed or cause True Time to wildly fluctuate.
+        // We identify the boost if it perfectly matches the skipSilenceSpeed.
+        if (currentSettings.skipSilence && displayRate === (currentSettings.skipSilenceSpeed || 4.5)) {
             displayRate = currentSettings.customSpeed || 1.0;
         } else {
-            // If jumpcutter is OFF, sync with the native player controls
+            // Otherwise, if Jumpcutter is off, or if it just dropped the speed back down to the user's
+            // normal speed (e.g. 2.0x), sync with it so the TrueTime pill updates accurately!
             currentSettings.customSpeed = displayRate;
         }
 
