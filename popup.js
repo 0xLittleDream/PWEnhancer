@@ -61,41 +61,35 @@ document.addEventListener('DOMContentLoaded', () => {
     skipSilenceToggle.addEventListener('change', (e) => {
         const speed = parseFloat(speedDropdown.value);
         const skipSpeed = parseFloat(skipSpeedDropdown.value);
+        const volumeThresh = parseFloat(volumeThresholdInput.value || 0.005);
         const newState = e.target.checked;
         const jcSettings = document.getElementById('jumpcutter-settings');
-        
-        if (!newState) {
-            const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
-            if (!confirmReload) {
-                // User cancelled, revert toggle
-                e.target.checked = true;
-                return;
-            }
-        }
         
         if (jcSettings) {
             jcSettings.style.display = newState ? 'flex' : 'none';
         }
 
-        chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
-            // Volume and margins are managed by the individual inputs, but we ensure speed is synced
-            chrome.storage.local.set({ soundedSpeed: speed }, () => {
-                chrome.storage.local.set({ 
-                    silenceSpeedSpecificationMethod: "absolute", 
-                    silenceSpeedRaw: skipSpeed 
-                }, () => {
-                    if (!newState) {
-                        // The minified bundle doesn't unload jumpcutter when disabled. 
-                        // We must reload the active PW tab to cleanly turn it off.
-                        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                            if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
-                                chrome.tabs.reload(tabs[0].id);
-                            }
-                        });
-                    }
-                });
+        if (!newState) {
+            // Soft Disable Trick
+            chrome.storage.local.set({ 
+                skipSilence: false, 
+                enabled: true, 
+                volumeThreshold: 0.0,
+                silenceSpeedSpecificationMethod: "absolute",
+                silenceSpeedRaw: speed,
+                soundedSpeed: speed
             });
-        });
+        } else {
+            // Enable Jumpcutter
+            chrome.storage.local.set({ 
+                skipSilence: true, 
+                enabled: true,
+                volumeThreshold: volumeThresh,
+                soundedSpeed: speed,
+                silenceSpeedSpecificationMethod: "absolute", 
+                silenceSpeedRaw: skipSpeed 
+            });
+        }
     });
 
     skipSpeedDropdown.addEventListener('change', (e) => {

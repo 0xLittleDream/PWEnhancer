@@ -329,14 +329,25 @@ function injectTimer() {
         const newState = !currentSettings.skipSilence;
         
         if (!newState) {
-            showPwToast("Jumpcutter disabled! Please manually reload the page when you're ready.");
-        }
-        
-        chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
-            currentSettings.skipSilence = newState;
-            updateJumpBtnState();
-            if (newState) {
-                // Ensure default speeds are set when turning on
+            showPwToast("Jumpcutter soft-disabled! No reload required.");
+            // Soft Disable Trick
+            const speed = parseFloat(speedLabel.textContent) || 1.0;
+            chrome.storage.local.set({ 
+                skipSilence: false, 
+                enabled: true, 
+                volumeThreshold: 0.0,
+                silenceSpeedSpecificationMethod: "absolute",
+                silenceSpeedRaw: speed,
+                soundedSpeed: speed
+            }, () => {
+                currentSettings.skipSilence = false;
+                updateJumpBtnState();
+            });
+        } else {
+            showPwToast("Jumpcutter enabled!");
+            chrome.storage.local.set({ skipSilence: true, enabled: true }, () => {
+                currentSettings.skipSilence = true;
+                updateJumpBtnState();
                 chrome.storage.local.get({ 
                     skipSilenceSpeed: 4.5, 
                     customSpeed: parseFloat(speedLabel.textContent) || 1.0,
@@ -353,8 +364,8 @@ function injectTimer() {
                         silenceSpeedRaw: items.skipSilenceSpeed
                     });
                 });
-            }
-        });
+            });
+        }
     });
 
     jumpcutterSection.appendChild(jumpBtn);
