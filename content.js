@@ -336,9 +336,17 @@ function injectTimer() {
                 }
             } else {
                 // Ensure default speeds are set when turning on
-                chrome.storage.local.get({ skipSilenceSpeed: 4.5, customSpeed: parseFloat(speedLabel.textContent) || 1.0 }, (items) => {
+                chrome.storage.local.get({ 
+                    skipSilenceSpeed: 4.5, 
+                    customSpeed: parseFloat(speedLabel.textContent) || 1.0,
+                    marginBefore: 0.15,
+                    marginAfter: 0.1,
+                    volumeThreshold: 0.006
+                }, (items) => {
                     chrome.storage.local.set({
-                        volumeThreshold: 0.006,
+                        volumeThreshold: items.volumeThreshold,
+                        marginBefore: items.marginBefore,
+                        marginAfter: items.marginAfter,
                         soundedSpeed: items.customSpeed,
                         silenceSpeedSpecificationMethod: "absolute",
                         silenceSpeedRaw: items.skipSilenceSpeed

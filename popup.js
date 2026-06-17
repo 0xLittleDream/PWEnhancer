@@ -11,14 +11,38 @@ document.addEventListener('DOMContentLoaded', () => {
         darkMode: false,
         skipSilence: false,
         customSpeed: 1.0,
-        skipSilenceSpeed: 4.5
+        skipSilenceSpeed: 4.5,
+        marginBefore: 0.15,
+        marginAfter: 0.1,
+        volumeThreshold: 0.006
     }, (items) => {
         showTrueTimeToggle.checked = items.showTrueTime;
         darkModeToggle.checked = items.darkMode;
         skipSilenceToggle.checked = items.skipSilence;
         speedDropdown.value = items.customSpeed;
         skipSpeedDropdown.value = items.skipSilenceSpeed;
+        
+        const mb = document.getElementById('margin-before');
+        const ma = document.getElementById('margin-after');
+        const vt = document.getElementById('volume-threshold');
+        if (mb) mb.value = items.marginBefore;
+        if (ma) ma.value = items.marginAfter;
+        if (vt) vt.value = items.volumeThreshold;
     });
+
+    // Wire up advanced settings
+    const wireInput = (id, key, isFloat = true) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', (e) => {
+                const val = isFloat ? parseFloat(e.target.value) : parseInt(e.target.value);
+                chrome.storage.local.set({ [key]: val });
+            });
+        }
+    };
+    wireInput('margin-before', 'marginBefore');
+    wireInput('margin-after', 'marginAfter');
+    wireInput('volume-threshold', 'volumeThreshold');
 
     // Handle toggles
     showTrueTimeToggle.addEventListener('change', (e) => {
@@ -34,19 +58,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const skipSpeed = parseFloat(skipSpeedDropdown.value);
         
         chrome.storage.local.set({ skipSilence: e.target.checked, enabled: e.target.checked }, () => {
-            chrome.storage.local.set({ volumeThreshold: 0.006 }, () => {
-                chrome.storage.local.set({ soundedSpeed: speed }, () => {
-                    chrome.storage.local.set({ 
-                        silenceSpeedSpecificationMethod: "absolute", 
-                        silenceSpeedRaw: skipSpeed 
-                    }, () => {
-                        // The minified bundle doesn't unload jumpcutter when disabled. 
-                        // We must reload the active PW tab to cleanly turn it off.
-                        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                            if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
-                                chrome.tabs.reload(tabs[0].id);
-                            }
-                        });
+            // Volume and margins are managed by the individual inputs, but we ensure speed is synced
+            chrome.storage.local.set({ soundedSpeed: speed }, () => {
+                chrome.storage.local.set({ 
+                    silenceSpeedSpecificationMethod: "absolute", 
+                    silenceSpeedRaw: skipSpeed 
+                }, () => {
+                    // The minified bundle doesn't unload jumpcutter when disabled. 
+                    // We must reload the active PW tab to cleanly turn it off.
+                    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                        if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
+                            chrome.tabs.reload(tabs[0].id);
+                        }
                     });
                 });
             });

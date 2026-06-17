@@ -63,20 +63,41 @@
                     <span class="slider round"></span>
                 </label>
             </div>
-            <div class="setting-row">
-                <div class="setting-info">
-                    <h3 class="setting-title">Silence Speed</h3>
-                    <p class="setting-description">Speed during silent parts.</p>
+            <div class="setting-row" style="flex-wrap: wrap;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <div class="setting-info">
+                        <h3 class="setting-title">Silence Speed</h3>
+                        <p class="setting-description">Speed during silent parts.</p>
+                    </div>
+                    <select id="skip-speed-dropdown" class="pw-dropdown">
+                        <option value="2.0">2.0x</option>
+                        <option value="3.0">3.0x</option>
+                        <option value="4.0">4.0x</option>
+                        <option value="4.5">4.5x</option>
+                        <option value="5.0">5.0x</option>
+                        <option value="6.0">6.0x</option>
+                        <option value="8.0">8.0x</option>
+                    </select>
                 </div>
-                <select id="skip-speed-dropdown" class="pw-dropdown">
-                    <option value="2.0">2.0x</option>
-                    <option value="3.0">3.0x</option>
-                    <option value="4.0">4.0x</option>
-                    <option value="4.5">4.5x</option>
-                    <option value="5.0">5.0x</option>
-                    <option value="6.0">6.0x</option>
-                    <option value="8.0">8.0x</option>
-                </select>
+                
+                <div style="width: 100%; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Advanced Audio Tuning</div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: #E5E7EB;">Padding Before (sec)</span>
+                        <input type="number" id="margin-before" value="0.0" step="0.05" min="0" max="0.5" style="width: 50px; background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 4px; font-size: 11px; font-family: 'Inter', sans-serif;">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: #E5E7EB;">Padding After (sec)</span>
+                        <input type="number" id="margin-after" value="0.0" step="0.05" min="0" max="0.5" style="width: 50px; background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 4px; font-size: 11px; font-family: 'Inter', sans-serif;">
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; color: #E5E7EB;">Volume Threshold</span>
+                        <input type="number" id="volume-threshold" value="0.006" step="0.001" min="0" max="0.1" style="width: 50px; background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 4px; font-size: 11px; font-family: 'Inter', sans-serif;">
+                    </div>
+                </div>
             </div>
 
             <div class="setting-row" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
