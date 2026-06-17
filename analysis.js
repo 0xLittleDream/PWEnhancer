@@ -25,6 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${m}m`;
     }
 
+    function formatTimeWithSeconds(totalSeconds) {
+        if (!totalSeconds || isNaN(totalSeconds)) return "0h 0m 0s";
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = Math.floor(totalSeconds % 60);
+        if (h > 0) return `${h}h ${m}m ${s}s`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+    }
+
     function formatYeolputaTime(totalSeconds) {
         if (!totalSeconds || isNaN(totalSeconds)) return "0:00";
         const h = Math.floor(totalSeconds / 3600);
@@ -59,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 1. Grand Total Header
             const grandTotalSaved = (res.detailedTimeSaved.customSpeed || 0) + (res.detailedTimeSaved.jumpcutter || 0);
-            document.getElementById('grand-total-saved').textContent = formatTime(grandTotalSaved);
+            document.getElementById('grand-total-saved').textContent = formatTimeWithSeconds(grandTotalSaved);
 
             // 2. Day Picker Labels
             const dayLabelEl = document.getElementById('current-day-label');
@@ -125,10 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayCat = res.dailyCategoryHistory[selectedIso] || { lectures: 0, dpps: 0, notes: 0 };
             const dayStudyTotal = (dayCat.lectures || 0) + (dayCat.dpps || 0) + (dayCat.notes || 0);
             
-            const updateStat = (id, value) => {
+            const updateStat = (id, value, useSeconds = false) => {
                 const valEl = document.getElementById(`val-${id}`);
                 if (valEl) {
-                    valEl.textContent = formatTime(value);
+                    valEl.textContent = useSeconds ? formatTimeWithSeconds(value) : formatTime(value);
                 }
             };
 
@@ -151,9 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 effJump = daySaved.jumpcutter || 0;
                 effTotal = effSpeed + effJump;
             }
-            updateStat('speed', effSpeed);
-            updateStat('jump', effJump);
-            document.getElementById('stat-total-saved').textContent = formatTime(effTotal);
+            updateStat('speed', effSpeed, true);
+            updateStat('jump', effJump, true);
+            document.getElementById('stat-total-saved').textContent = formatTimeWithSeconds(effTotal);
 
             // 6. Render Monthly Calendar
             document.getElementById('current-month-label').textContent = selectedMonth.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
