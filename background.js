@@ -48,7 +48,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 totalStudySeconds: 0,
                 detailedStudyTime: { lectures: 0, notes: 0, dpps: 0 },
                 detailedTimeSaved: { customSpeed: 0, jumpcutter: 0 },
-                dailyHistory: {}
+                dailyHistory: {},
+                hourlyHistory: {}, // { "YYYY-MM-DD": { "0": 10, ... "23": 50 } }
+                dailyCategoryHistory: {}, // { "YYYY-MM-DD": { lectures: 10, notes: 0, dpps: 5 } }
+                dailySavedHistory: {} // { "YYYY-MM-DD": { customSpeed: 10, jumpcutter: 5 } }
             };
 
             chrome.storage.local.get(defaults, (res) => {
@@ -57,6 +60,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 let detailedTime = res.detailedStudyTime;
                 let detailedSaved = res.detailedTimeSaved;
                 let history = res.dailyHistory;
+                let hourly = res.hourlyHistory;
+                let dailyCat = res.dailyCategoryHistory;
+                let dailySaved = res.dailySavedHistory;
                 
                 // Keep the legacy today tracker just in case
                 if (data.date !== today) {
@@ -66,22 +72,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 data.seconds += 5; // adding 5 seconds per heartbeat
                 total += 5;
                 
-                // Update history map
-                const isoDate = new Date().toISOString().split('T')[0];
-                if (!history[isoDate]) {
-                    history[isoDate] = 0;
-                }
+                // Update history maps
+                const now = new Date();
+                const isoDate = now.toISOString().split('T')[0];
+                const currentHour = now.getHours().toString(); // "0" to "23"
+                
+                if (!history[isoDate]) history[isoDate] = 0;
                 history[isoDate] += 5;
+                
+                if (!hourly[isoDate]) hourly[isoDate] = {};
+                if (!hourly[isoDate][currentHour]) hourly[isoDate][currentHour] = 0;
+                hourly[isoDate][currentHour] += 5;
+                
+                if (!dailyCat[isoDate]) dailyCat[isoDate] = { lectures: 0, notes: 0, dpps: 0 };
+                if (!dailySaved[isoDate]) dailySaved[isoDate] = { customSpeed: 0, jumpcutter: 0 };
                 
                 if (request.type && detailedTime[request.type] !== undefined) {
                     detailedTime[request.type] += 5;
+                    dailyCat[isoDate][request.type] += 5;
                 }
 
                 if (request.customSpeedSaved) {
                     detailedSaved.customSpeed += request.customSpeedSaved;
+                    dailySaved[isoDate].customSpeed += request.customSpeedSaved;
                 }
                 if (request.jumpcutterSaved) {
                     detailedSaved.jumpcutter += request.jumpcutterSaved;
+                    dailySaved[isoDate].jumpcutter += request.jumpcutterSaved;
                 }
                 
                 chrome.storage.local.set({ 
@@ -89,7 +106,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     totalStudySeconds: total,
                     detailedStudyTime: detailedTime,
                     detailedTimeSaved: detailedSaved,
-                    dailyHistory: history
+                    dailyHistory: history,
+                    hourlyHistory: hourly,
+                    dailyCategoryHistory: dailyCat,
+                    dailySavedHistory: dailySaved
                 });
             });
         }
