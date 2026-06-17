@@ -4,7 +4,8 @@
   "version": "3.0.0",
   "description": "The ultimate extension to supercharge your Physics Wallah experience.",
   "host_permissions": [
-    "<all_urls>"
+    "*://*.pw.live/*",
+    "*://streamfiles.eu.org/*"
   ],
   "permissions": [
     "storage",
@@ -33,7 +34,8 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "*://*.pw.live/*",
+        "*://streamfiles.eu.org/*"
       ],
       "js": ["content/main.js", "content.js"],
       "all_frames": true,
@@ -42,7 +44,10 @@
   ],
   "web_accessible_resources": [
     {
-      "matches": [ "<all_urls>" ],
+      "matches": [
+        "*://*.pw.live/*",
+        "*://streamfiles.eu.org/*"
+      ],
       "resources": [ 
         "content/cloneMediaSources-for-page-world.js", 
         "content/SilenceDetectorProcessor.js", 
