@@ -40,6 +40,33 @@
                 <div class="canvas-container" style="position: relative; height: 250px; width: 100%;">
                     <canvas id="categoryTrendChart"></canvas>
                 </div>
+
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0;"></div>
+
+                <div class="chart-container">
+                    <div class="bar-group">
+                        <div class="bar-label">Lectures (All Time)</div>
+                        <div class="bar-wrapper">
+                            <div id="bar-lectures" class="bar fill-lectures" style="width: 0%;"></div>
+                        </div>
+                        <div id="val-lectures" class="bar-value">0h 0m</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-label">DPPs (All Time)</div>
+                        <div class="bar-wrapper">
+                            <div id="bar-dpps" class="bar fill-dpps" style="width: 0%;"></div>
+                        </div>
+                        <div id="val-dpps" class="bar-value">0h 0m</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-label">Notes & PDFs (All Time)</div>
+                        <div class="bar-wrapper">
+                            <div id="bar-notes" class="bar fill-notes" style="width: 0%;"></div>
+                        </div>
+                        <div id="val-notes" class="bar-value">0h 0m</div>
+                    </div>
+                </div>
+
                 <div class="stat-row">
                     <span>Total Active Time (All-Time):</span>
                     <strong id="stat-total-study">0h 0m</strong>
@@ -53,8 +80,28 @@
                 <div class="canvas-container" style="position: relative; height: 250px; width: 100%;">
                     <canvas id="savedTrendChart"></canvas>
                 </div>
+
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 24px 0;"></div>
+
+                <div class="chart-container">
+                    <div class="bar-group">
+                        <div class="bar-label">Saved by Custom Speed (All Time)</div>
+                        <div class="bar-wrapper">
+                            <div id="bar-speed" class="bar fill-speed" style="width: 0%;"></div>
+                        </div>
+                        <div id="val-speed" class="bar-value">0h 0m</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-label">Saved by Jumpcutter (All Time)</div>
+                        <div class="bar-wrapper">
+                            <div id="bar-jump" class="bar fill-jump" style="width: 0%;"></div>
+                        </div>
+                        <div id="val-jump" class="bar-value">0h 0m</div>
+                    </div>
+                </div>
+
                 <div class="stat-row">
-                    <span>Total Efficiency Bonus:</span>
+                    <span>Total Efficiency Bonus (All Time):</span>
                     <strong id="stat-total-saved">0h 0m</strong>
                 </div>
             </section>
@@ -62,9 +109,11 @@
             <!-- Section 4: All-Time Heatmap Calendar (Full Width) -->
             <section class="card full-width">
                 <h2>Study Consistency Calendar</h2>
-                <p class="subtitle">Your GitHub-style daily study heatmap.</p>
-                <div class="heatmap-container" id="heatmap-container">
-                    <!-- Javascript will inject grid squares here -->
+                <p class="subtitle">Your daily study intensity over the past 6 months.</p>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-container" id="heatmap-container">
+                        <!-- Javascript will inject grid squares here -->
+                    </div>
                 </div>
             </section>
         </main>

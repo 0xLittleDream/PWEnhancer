@@ -79,7 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, suggestedMax: 60 }
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 60,
+                            ticks: {
+                                stepSize: 10,
+                                callback: function(value) { return value + 'm'; }
+                            }
+                        }
                     },
                     plugins: {
                         legend: { display: false },
@@ -110,7 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
-                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 2,
+                            ticks: { stepSize: 1, callback: function(value) { return value + 'h'; } }
+                        } 
+                    },
                     plugins: {
                         tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(1)}h` } }
                     }
@@ -138,7 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     maintainAspectRatio: false,
                     scales: {
                         x: { stacked: true },
-                        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hours Saved' } }
+                        y: { 
+                            stacked: true, 
+                            beginAtZero: true, 
+                            suggestedMax: 2,
+                            ticks: { stepSize: 1, callback: function(value) { return value + 'h'; } }
+                        }
                     },
                     plugins: {
                         tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(1)}h` } }
@@ -146,7 +164,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 6. Render Heatmap Calendar
+            // 6. Update Summary Bars (All-Time Data)
+            const updateBar = (id, value, total) => {
+                const barEl = document.getElementById(`bar-${id}`);
+                const valEl = document.getElementById(`val-${id}`);
+                if (barEl && valEl) {
+                    valEl.textContent = formatTime(value);
+                    const percentage = total > 0 ? (value / total) * 100 : 0;
+                    barEl.style.width = (value > 0 && percentage < 2) ? '2%' : `${percentage}%`;
+                }
+            };
+
+            updateBar('lectures', res.detailedStudyTime.lectures || 0, totalStudy);
+            updateBar('dpps', res.detailedStudyTime.dpps || 0, totalStudy);
+            updateBar('notes', res.detailedStudyTime.notes || 0, totalStudy);
+
+            updateBar('speed', res.detailedTimeSaved.customSpeed || 0, totalSaved);
+            updateBar('jump', res.detailedTimeSaved.jumpcutter || 0, totalSaved);
+
+            // 7. Render Heatmap Calendar
             renderHeatmap(res.dailyHistory);
         });
     }
@@ -156,14 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!container) return;
         container.innerHTML = '';
 
-        // Generate last 180 days (approx 6 months) to fit beautifully
-        const daysToRender = 180;
+        // Generate exactly 182 days (26 weeks * 7 days) to fill the grid perfectly
+        const daysToRender = 182;
         
         // Find max study day to calculate intensity levels
         const values = Object.values(historyObj).filter(v => typeof v === 'number');
         const maxSeconds = values.length > 0 ? Math.max(...values) : 3600;
 
-        // Create grid
+        // Ensure we append them chronologically so the grid flows left to right
         for (let i = daysToRender - 1; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);

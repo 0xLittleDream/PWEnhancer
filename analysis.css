@@ -147,12 +147,68 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Heatmap Calendar */
-.heatmap-container {
+/* Original Bar Graph CSS */
+.chart-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bar-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.bar-wrapper {
+    width: 100%;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bar-value {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.fill-lectures { background: linear-gradient(90deg, #2563eb, var(--color-lectures)); box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+.fill-dpps { background: linear-gradient(90deg, #7c3aed, var(--color-dpps)); box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
+.fill-notes { background: linear-gradient(90deg, #059669, var(--color-notes)); box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+
+.fill-speed { background: linear-gradient(90deg, #d97706, var(--color-speed)); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+.fill-jump { background: linear-gradient(90deg, #dc2626, var(--color-jump)); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+/* Heatmap Calendar */
+.heatmap-wrapper {
+    overflow-x: auto;
+    padding-bottom: 16px;
+}
+
+.heatmap-container {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
     gap: 4px;
     margin-top: 16px;
+    width: max-content;
 }
 
 .heatmap-day {
