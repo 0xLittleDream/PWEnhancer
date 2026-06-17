@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let startOffset = firstDay.getDay() - 1;
             if (startOffset === -1) startOffset = 6; 
 
-            // Find max for scaling
+            // Find max for scaling (optional, we use absolute now)
             const allValues = Object.values(res.dailyHistory).filter(v => typeof v === 'number');
             const maxSeconds = allValues.length > 0 ? Math.max(...allValues) : 3600;
 
@@ -194,10 +194,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let level = 0;
                 if (seconds > 0) {
-                    const ratio = seconds / maxSeconds;
-                    if (ratio > 0.75) level = 4;
-                    else if (ratio > 0.5) level = 3;
-                    else if (ratio > 0.25) level = 2;
+                    const hours = seconds / 3600;
+                    if (hours >= 6) level = 4;
+                    else if (hours >= 4) level = 3;
+                    else if (hours >= 2) level = 2;
                     else level = 1;
                 }
 
