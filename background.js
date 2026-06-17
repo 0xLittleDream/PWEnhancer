@@ -47,7 +47,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 studyData: { date: today, seconds: 0 },
                 totalStudySeconds: 0,
                 detailedStudyTime: { lectures: 0, notes: 0, dpps: 0 },
-                detailedTimeSaved: { customSpeed: 0, jumpcutter: 0 }
+                detailedTimeSaved: { customSpeed: 0, jumpcutter: 0 },
+                dailyHistory: {}
             };
 
             chrome.storage.local.get(defaults, (res) => {
@@ -55,13 +56,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 let total = res.totalStudySeconds;
                 let detailedTime = res.detailedStudyTime;
                 let detailedSaved = res.detailedTimeSaved;
+                let history = res.dailyHistory;
                 
+                // Keep the legacy today tracker just in case
                 if (data.date !== today) {
                     data = { date: today, seconds: 0 };
                 }
                 
                 data.seconds += 5; // adding 5 seconds per heartbeat
                 total += 5;
+                
+                // Update history map
+                const isoDate = new Date().toISOString().split('T')[0];
+                if (!history[isoDate]) {
+                    history[isoDate] = 0;
+                }
+                history[isoDate] += 5;
                 
                 if (request.type && detailedTime[request.type] !== undefined) {
                     detailedTime[request.type] += 5;
@@ -78,7 +88,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     studyData: data, 
                     totalStudySeconds: total,
                     detailedStudyTime: detailedTime,
-                    detailedTimeSaved: detailedSaved
+                    detailedTimeSaved: detailedSaved,
+                    dailyHistory: history
                 });
             });
         }

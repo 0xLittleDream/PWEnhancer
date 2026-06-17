@@ -74,49 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Study Time Logic
-    const studyTimeDisplay = document.getElementById('study-time-display');
-    const totalTimeDisplay = document.getElementById('total-time-display');
-    
-    function formatStudyTime(seconds) {
-        if (!seconds) return "00h 00m";
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
-    }
-
-    function updateStudyTimeUI() {
-        const today = new Date().toLocaleDateString();
-        chrome.storage.local.get(['studyData', 'totalStudySeconds'], (res) => {
-            const data = res.studyData;
-            if (data && data.date === today) {
-                studyTimeDisplay.textContent = formatStudyTime(data.seconds);
-            } else {
-                studyTimeDisplay.textContent = "00h 00m";
-            }
-            
-            totalTimeDisplay.textContent = formatStudyTime(res.totalStudySeconds || 0);
-        });
-    }
-
-    updateStudyTimeUI();
-
-    // Listen for storage changes to update UI in real-time if popup is open
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-        if (namespace === 'local') {
-            if (changes.studyData) {
-                const today = new Date().toLocaleDateString();
-                const newData = changes.studyData.newValue;
-                if (newData && newData.date === today) {
-                    studyTimeDisplay.textContent = formatStudyTime(newData.seconds);
-                }
-            }
-            if (changes.totalStudySeconds) {
-                totalTimeDisplay.textContent = formatStudyTime(changes.totalStudySeconds.newValue);
-            }
-        }
-    });
-
     const openAnalysisBtn = document.getElementById('open-analysis-btn');
     if (openAnalysisBtn) {
         openAnalysisBtn.addEventListener('click', () => {
