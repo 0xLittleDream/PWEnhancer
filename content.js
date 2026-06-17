@@ -680,6 +680,7 @@ function injectLightboxButtons() {
 const observer = new MutationObserver((mutations, obs) => {
     injectTimer();
     injectLightboxButtons();
+    initTimeSavedTracker();
 });
 
 observer.observe(document.documentElement, {
@@ -689,6 +690,7 @@ observer.observe(document.documentElement, {
 
 injectTimer();
 injectLightboxButtons();
+initTimeSavedTracker();
 
 // --- DETAILED STUDY & TIME SAVED TRACKER ---
 let accumulatedCustomSaved = 0;
@@ -697,8 +699,14 @@ let accumulatedJumpSaved = 0;
 let lastVideoTime = -1;
 let lastRealTime = -1;
 
-const video = document.querySelector('video.vjs-tech') || document.querySelector('video');
-if (video) {
+let timeSavedTrackerInjected = false;
+
+function initTimeSavedTracker() {
+    if (timeSavedTrackerInjected) return;
+    const video = document.querySelector('video.vjs-tech') || document.querySelector('video');
+    if (!video) return;
+    timeSavedTrackerInjected = true;
+
     video.addEventListener('timeupdate', () => {
         const currentVideoTime = video.currentTime;
         const currentRealTime = performance.now();
@@ -734,8 +742,9 @@ if (video) {
 }
 
 setInterval(() => {
+    const videoElement = document.querySelector('video.vjs-tech') || document.querySelector('video');
     // As long as the document isn't completely hidden (or video is playing), track it.
-    if (!document.hidden || (video && !video.paused)) {
+    if (!document.hidden || (videoElement && !videoElement.paused)) {
         const url = window.location.href;
         if (url.includes('/watch') || url.includes('streamfiles.eu.org')) {
             let data = { action: "addStudyTime", type: "lectures" };
