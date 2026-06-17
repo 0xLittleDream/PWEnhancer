@@ -699,13 +699,12 @@ let accumulatedJumpSaved = 0;
 let lastVideoTime = -1;
 let lastRealTime = -1;
 
-let timeSavedTrackerInjected = false;
-
 function initTimeSavedTracker() {
-    if (timeSavedTrackerInjected) return;
     const video = document.querySelector('video.vjs-tech') || document.querySelector('video');
     if (!video) return;
-    timeSavedTrackerInjected = true;
+    
+    if (video.dataset.pwTrackerInjected) return;
+    video.dataset.pwTrackerInjected = 'true';
 
     video.addEventListener('timeupdate', () => {
         const currentVideoTime = video.currentTime;
