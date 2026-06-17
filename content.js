@@ -324,16 +324,21 @@ function injectTimer() {
         e.stopPropagation();
         const newState = !currentSettings.skipSilence;
         
+        if (!newState) {
+            // Minified script cannot be cleanly stopped without reload
+            const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
+            if (!confirmReload) {
+                // User cancelled, keep it on
+                return;
+            }
+        }
+        
         chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
             currentSettings.skipSilence = newState;
             updateJumpBtnState();
             
             if (!newState) {
-                // Minified script cannot be cleanly stopped without reload
-                const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
-                if (confirmReload) {
-                    window.location.reload();
-                }
+                window.location.reload();
             } else {
                 // Ensure default speeds are set when turning on
                 chrome.storage.local.get({ 
@@ -341,7 +346,7 @@ function injectTimer() {
                     customSpeed: parseFloat(speedLabel.textContent) || 1.0,
                     marginBefore: 0.15,
                     marginAfter: 0.1,
-                    volumeThreshold: 0.006
+                    volumeThreshold: 0.005
                 }, (items) => {
                     chrome.storage.local.set({
                         volumeThreshold: items.volumeThreshold,

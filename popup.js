@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         skipSilenceSpeed: 4.5,
         marginBefore: 0.15,
         marginAfter: 0.1,
-        volumeThreshold: 0.006
+        volumeThreshold: 0.005
     }, (items) => {
         showTrueTimeToggle.checked = items.showTrueTime;
         darkModeToggle.checked = items.darkMode;
@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mb) mb.value = items.marginBefore;
         if (ma) ma.value = items.marginAfter;
         if (vt) vt.value = items.volumeThreshold;
+        
+        const jcSettings = document.getElementById('jumpcutter-settings');
+        if (jcSettings) {
+            jcSettings.style.display = items.skipSilence ? 'flex' : 'none';
+        }
     });
 
     // Wire up advanced settings
@@ -56,21 +61,38 @@ document.addEventListener('DOMContentLoaded', () => {
     skipSilenceToggle.addEventListener('change', (e) => {
         const speed = parseFloat(speedDropdown.value);
         const skipSpeed = parseFloat(skipSpeedDropdown.value);
+        const newState = e.target.checked;
+        const jcSettings = document.getElementById('jumpcutter-settings');
         
-        chrome.storage.local.set({ skipSilence: e.target.checked, enabled: e.target.checked }, () => {
+        if (!newState) {
+            const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
+            if (!confirmReload) {
+                // User cancelled, revert toggle
+                e.target.checked = true;
+                return;
+            }
+        }
+        
+        if (jcSettings) {
+            jcSettings.style.display = newState ? 'flex' : 'none';
+        }
+
+        chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
             // Volume and margins are managed by the individual inputs, but we ensure speed is synced
             chrome.storage.local.set({ soundedSpeed: speed }, () => {
                 chrome.storage.local.set({ 
                     silenceSpeedSpecificationMethod: "absolute", 
                     silenceSpeedRaw: skipSpeed 
                 }, () => {
-                    // The minified bundle doesn't unload jumpcutter when disabled. 
-                    // We must reload the active PW tab to cleanly turn it off.
-                    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                        if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
-                            chrome.tabs.reload(tabs[0].id);
-                        }
-                    });
+                    if (!newState) {
+                        // The minified bundle doesn't unload jumpcutter when disabled. 
+                        // We must reload the active PW tab to cleanly turn it off.
+                        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                            if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
+                                chrome.tabs.reload(tabs[0].id);
+                            }
+                        });
+                    }
                 });
             });
         });

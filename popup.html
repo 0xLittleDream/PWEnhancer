@@ -56,14 +56,14 @@
             <div class="setting-row">
                 <div class="setting-info">
                     <h3 class="setting-title">Skip Silence (Jumpcutter)</h3>
-                    <p class="setting-description">Instantly fast-forwards through dead air.</p>
+                    <p class="setting-description">Instantly fast-forwards through dead air.<br><span style="font-size:10px; opacity:0.7;">(Turning off requires page reload)</span></p>
                 </div>
                 <label class="switch">
                     <input type="checkbox" id="skip-silence">
                     <span class="slider round"></span>
                 </label>
             </div>
-            <div class="setting-row" style="flex-wrap: wrap;">
+            <div id="jumpcutter-settings" class="setting-row" style="flex-wrap: wrap; display: none; padding-top: 0; border-top: none; margin-top: -8px;">
                 <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                     <div class="setting-info">
                         <h3 class="setting-title">Silence Speed</h3>
@@ -95,7 +95,7 @@
                     
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 12px; color: #E5E7EB;">Volume Threshold</span>
-                        <input type="number" id="volume-threshold" value="0.006" step="0.001" min="0" max="0.1" style="width: 50px; background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 4px; font-size: 11px; font-family: 'Inter', sans-serif;">
+                        <input type="number" id="volume-threshold" value="0.005" step="0.001" min="0" max="0.1" style="width: 50px; background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 4px; font-size: 11px; font-family: 'Inter', sans-serif;">
                     </div>
                 </div>
             </div>
