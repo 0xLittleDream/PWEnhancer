@@ -768,8 +768,8 @@ if (video) {
             const deltaV = currentVideoTime - lastVideoTime;
             const deltaT = (currentRealTime - lastRealTime) / 1000;
             
-            // Ignore massive jumps (seeking) or pauses
-            if (deltaV > 0 && Math.abs(deltaV - deltaT * video.playbackRate) < 1.0 && deltaV < 2.0) {
+            // Ignore massive jumps (seeking) larger than 10 seconds
+            if (deltaV > 0 && deltaV < 10.0) {
                 const Sc = currentSettings.customSpeed || 1.0;
                 
                 let customSpeedSaved = deltaV - (deltaV / Sc);
@@ -795,7 +795,8 @@ if (video) {
 }
 
 setInterval(() => {
-    if (!document.hidden && document.hasFocus()) {
+    // As long as the document isn't completely hidden (or video is playing), track it.
+    if (!document.hidden || (video && !video.paused)) {
         const url = window.location.href;
         if (url.includes('/watch') || url.includes('streamfiles.eu.org')) {
             let data = { action: "addStudyTime", type: "lectures" };
