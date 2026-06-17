@@ -153,6 +153,7 @@ if (chrome && chrome.storage) {
         skipSilenceSpeed: 4.5
     }, (items) => {
         currentSettings = items;
+        updateStyles();
     });
 
     chrome.storage.onChanged.addListener((changes, namespace) => {
