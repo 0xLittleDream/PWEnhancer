@@ -70,6 +70,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (typeof detailedSaved.customSpeed !== 'number' || isNaN(detailedSaved.customSpeed)) detailedSaved.customSpeed = 0;
             if (typeof detailedSaved.jumpcutter !== 'number' || isNaN(detailedSaved.jumpcutter)) detailedSaved.jumpcutter = 0;
 
+            if (!detailedTime) detailedTime = { lectures: 0, dpps: 0, notes: 0 };
+            if (!dailyCat[isoDate]) dailyCat[isoDate] = { lectures: 0, notes: 0, dpps: 0 };
+            
+            ['lectures', 'notes', 'dpps'].forEach(k => {
+                if (typeof detailedTime[k] !== 'number' || isNaN(detailedTime[k])) detailedTime[k] = 0;
+                if (typeof dailyCat[isoDate][k] !== 'number' || isNaN(dailyCat[isoDate][k])) dailyCat[isoDate][k] = 0;
+            });
+
+            if (typeof history[isoDate] !== 'number' || isNaN(history[isoDate])) history[isoDate] = 0;
+
             // ALWAYS add Time Saved (never drops!)
             if (!dailySaved[isoDate]) dailySaved[isoDate] = { customSpeed: 0, jumpcutter: 0 };
             if (typeof dailySaved[isoDate].customSpeed !== 'number' || isNaN(dailySaved[isoDate].customSpeed)) dailySaved[isoDate].customSpeed = 0;
