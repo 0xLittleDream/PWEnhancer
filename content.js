@@ -293,74 +293,62 @@ function injectTimer() {
 
     captureSection.appendChild(captureBtn);
 
-    // Auto-Poll Hacker Section
-    const pollHackerSection = document.createElement('div');
-    pollHackerSection.style.cssText = `
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 6px;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 4px 8px;
-        border-radius: 8px;
-        margin-top: 8px;
-    `;
+    // 5. Jumpcutter Toggle Section
+    const jumpcutterSection = document.createElement('div');
+    jumpcutterSection.style.cssText = "display: flex; align-items: center; padding: 0 4px;";
     
-    const pollLabel = document.createElement('span');
-    pollLabel.textContent = "Auto-Poll:";
-    pollLabel.style.cssText = "font-size: 10px; color: #A3A3A3; font-weight: 600;";
-    pollHackerSection.appendChild(pollLabel);
+    const jumpBtn = document.createElement('button');
+    jumpBtn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 19 22 12 13 5 13 19"></polygon>
+            <polygon points="2 19 11 12 2 5 2 19"></polygon>
+        </svg>
+    `;
+    jumpBtn.style.cssText = btnStyle;
+    jumpBtn.title = "Jumpcutter (Skip Silence)";
 
-    const pollButtons = [];
-    let primedOption = null;
+    const updateJumpBtnState = () => {
+        if (currentSettings.skipSilence) {
+            jumpBtn.style.color = '#10B981'; // Green
+        } else {
+            jumpBtn.style.color = '#F3F4F6'; // Gray
+        }
+    };
+    // Initialize color on load
+    updateJumpBtnState();
 
-    ['A', 'B', 'C', 'D'].forEach(opt => {
-        const btn = document.createElement('button');
-        btn.textContent = opt;
-        btn.className = 'pw-auto-poll-btn-ignore';
-        btn.style.cssText = `
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        `;
+    jumpBtn.onmouseover = () => jumpBtn.style.background = 'rgba(255,255,255,0.1)';
+    jumpBtn.onmouseout = () => jumpBtn.style.background = 'transparent';
+
+    jumpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newState = !currentSettings.skipSilence;
         
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (primedOption === opt) {
-                // Un-prime
-                primedOption = null;
-                pollButtons.forEach(b => {
-                    b.style.background = 'rgba(255,255,255,0.1)';
-                    b.style.borderColor = 'rgba(255,255,255,0.2)';
-                    b.style.boxShadow = 'none';
-                });
+        chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
+            currentSettings.skipSilence = newState;
+            updateJumpBtnState();
+            
+            if (!newState) {
+                // Minified script cannot be cleanly stopped without reload
+                const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
+                if (confirmReload) {
+                    window.location.reload();
+                }
             } else {
-                // Prime this option
-                primedOption = opt;
-                pollButtons.forEach(b => {
-                    if (b === btn) {
-                        b.style.background = '#22c55e'; // Green
-                        b.style.borderColor = '#16a34a';
-                        b.style.boxShadow = '0 0 8px rgba(34, 197, 94, 0.5)';
-                    } else {
-                        b.style.background = 'rgba(255,255,255,0.1)';
-                        b.style.borderColor = 'rgba(255,255,255,0.2)';
-                        b.style.boxShadow = 'none';
-                    }
+                // Ensure default speeds are set when turning on
+                chrome.storage.local.get({ skipSilenceSpeed: 4.5, customSpeed: parseFloat(speedLabel.textContent) || 1.0 }, (items) => {
+                    chrome.storage.local.set({
+                        volumeThreshold: 0.006,
+                        soundedSpeed: items.customSpeed,
+                        silenceSpeedSpecificationMethod: "absolute",
+                        silenceSpeedRaw: items.skipSilenceSpeed
+                    });
                 });
             }
         });
-        
-        pollButtons.push(btn);
-        pollHackerSection.appendChild(btn);
     });
+
+    jumpcutterSection.appendChild(jumpBtn);
 
     const mainRow = document.createElement('div');
     mainRow.style.cssText = "display: flex; align-items: center;";
@@ -368,70 +356,12 @@ function injectTimer() {
     mainRow.appendChild(divider);
     mainRow.appendChild(speedSection);
     mainRow.appendChild(captureSection);
+    mainRow.appendChild(jumpcutterSection);
 
     // Assemble Pill
     timerContainer.appendChild(mainRow);
-    timerContainer.appendChild(pollHackerSection);
 
     header.appendChild(timerContainer);
-
-    // Aggressive DOM Hunter for the Poll
-    let hasClickedPollIcon = false;
-
-    setInterval(() => {
-        if (!primedOption) return;
-
-        // 1. Check if the poll icon has turned blue (class changed)
-        const pollIconBtn = document.getElementById('vjs-custom-poll-button');
-        if (pollIconBtn && !hasClickedPollIcon) {
-            if (pollIconBtn.className !== "vjs-button vjs-custom-poll-button") {
-                pollIconBtn.click();
-                hasClickedPollIcon = true;
-            }
-        }
-
-        // 2. Fast native XPath search for the exact text
-        const query = `//*[text()='${primedOption}' or text()='${primedOption}.']`;
-        const snapshot = document.evaluate(query, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-        for (let i = 0; i < snapshot.snapshotLength; i++) {
-            const target = snapshot.snapshotItem(i);
-            
-            // Skip our own buttons
-            if (target.classList && target.classList.contains('pw-auto-poll-btn-ignore')) continue;
-            
-            // Skip script and style tags just in case
-            if (target.tagName === 'SCRIPT' || target.tagName === 'STYLE') continue;
-
-            const rect = target.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-                
-                // Extra safety: Poll options are usually clickable (buttons or pointer cursor)
-                // We also skip anything inside a generic 'header' or 'nav' to avoid clicking your profile Avatar (which might be 'A')
-                const style = window.getComputedStyle(target);
-                const isClickable = target.tagName === 'BUTTON' || style.cursor === 'pointer';
-                const isNotInHeader = !target.closest('header, nav, .header, .nav');
-
-                if (isClickable && isNotInHeader) {
-                    target.click();
-                    if (target.parentElement) target.parentElement.click();
-                    if (target.parentElement && target.parentElement.parentElement) target.parentElement.parentElement.click();
-
-                    primedOption = null;
-                    hasClickedPollIcon = false; // Reset for next time
-                    pollButtons.forEach(b => {
-                        b.style.background = 'rgba(255,255,255,0.1)';
-                        b.style.borderColor = 'rgba(255,255,255,0.2)';
-                        b.style.boxShadow = 'none';
-                    });
-                    
-                    pollHackerSection.style.boxShadow = '0 0 15px #22c55e';
-                    setTimeout(() => pollHackerSection.style.boxShadow = 'none', 1000);
-                    break;
-                }
-            }
-        }
-    }, 400);
 
     // Auto-Hide Logic
     let hideTimerTimeout;
