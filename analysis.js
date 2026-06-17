@@ -25,6 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${m}m`;
     }
 
+    function formatYeolputaTime(totalSeconds) {
+        if (!totalSeconds || isNaN(totalSeconds)) return "0:00";
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+
     function getIso(dateObj) {
         // adjust for timezone to get local YYYY-MM-DD
         const offset = dateObj.getTimezoneOffset() * 60000;
@@ -54,12 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const grandTotalSaved = (res.detailedTimeSaved.customSpeed || 0) + (res.detailedTimeSaved.jumpcutter || 0);
             document.getElementById('grand-total-saved').textContent = formatTime(grandTotalSaved);
 
-            // 2. Day Picker Label
+            // 2. Day Picker Labels
             const dayLabelEl = document.getElementById('current-day-label');
+            const effDayLabelEl = document.getElementById('current-eff-day-label');
+            const effDatePicker = document.getElementById('eff-date-picker');
+
             if (isSameDay(selectedDate, today)) {
                 dayLabelEl.textContent = "Today";
+                effDayLabelEl.textContent = "Today";
             } else {
-                dayLabelEl.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+                const formattedDate = selectedDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+                dayLabelEl.textContent = formattedDate;
+                effDayLabelEl.textContent = formattedDate;
+            }
+
+            if (isAllTimeSaved) {
+                effDatePicker.style.display = 'none';
+            } else {
+                effDatePicker.style.display = 'flex';
             }
 
             // 3. Render 24-hour Graph
@@ -187,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isSameDay(cellDate, today)) cell.classList.add('today');
                 if (level > 0) cell.classList.add(`heat-${level}`);
 
-                const timeHtml = seconds > 0 ? `<div class="cal-time">⏱ ${formatTime(seconds)}</div>` : '';
+                const timeHtml = seconds > 0 ? `<div class="cal-time">⏱ ${formatYeolputaTime(seconds)}</div>` : '';
 
                 cell.innerHTML = `
                     <div class="cal-date">${i}</div>
@@ -204,6 +223,18 @@ document.addEventListener('DOMContentLoaded', () => {
         renderUI();
     });
     document.getElementById('next-day').addEventListener('click', () => {
+        const today = new Date();
+        if (selectedDate < today) {
+            selectedDate.setDate(selectedDate.getDate() + 1);
+            renderUI();
+        }
+    });
+
+    document.getElementById('prev-eff-day').addEventListener('click', () => {
+        selectedDate.setDate(selectedDate.getDate() - 1);
+        renderUI();
+    });
+    document.getElementById('next-eff-day').addEventListener('click', () => {
         const today = new Date();
         if (selectedDate < today) {
             selectedDate.setDate(selectedDate.getDate() + 1);
