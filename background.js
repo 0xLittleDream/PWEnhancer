@@ -73,9 +73,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 total += 5;
                 
                 // Update history maps
-                const now = new Date();
-                const isoDate = now.toISOString().split('T')[0];
-                const currentHour = now.getHours().toString(); // "0" to "23"
+                const currentDate = new Date();
+                const isoDate = currentDate.toISOString().split('T')[0];
+                const currentHour = currentDate.getHours().toString(); // "0" to "23"
                 
                 if (!history[isoDate]) history[isoDate] = 0;
                 history[isoDate] += 5;

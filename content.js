@@ -504,16 +504,6 @@ function injectTimer() {
     // Apply custom speed if set
     applyCustomSpeed(video);
 
-    if (video) {
-        video.addEventListener('play', () => {
-            initJumpcutter();
-        }, { once: true });
-        
-        if (!video.paused) {
-            initJumpcutter();
-        }
-    }
-
     return true;
 }
 

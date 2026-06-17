@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.get({
         showTrueTime: true,
         darkMode: false,
-        skipSilence: false,
+        skipSilence: true, // Jumpcutter defaults to true in the minified bundle
         customSpeed: 1.0,
         skipSilenceSpeed: 4.5
     }, (items) => {
@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     chrome.storage.local.set({ 
                         silenceSpeedSpecificationMethod: "absolute", 
                         silenceSpeedRaw: skipSpeed 
+                    }, () => {
+                        // The minified bundle doesn't unload jumpcutter when disabled. 
+                        // We must reload the active PW tab to cleanly turn it off.
+                        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                            if (tabs[0] && tabs[0].url && tabs[0].url.includes("pw.live")) {
+                                chrome.tabs.reload(tabs[0].id);
+                            }
+                        });
                     });
                 });
             });
