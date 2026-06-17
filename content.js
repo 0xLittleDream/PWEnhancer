@@ -486,15 +486,25 @@ function injectTimer() {
     const updateTrueTime = () => {
         if (!video.duration) return;
         const remainingSeconds = video.duration - video.currentTime;
-        const playbackRate = video.playbackRate || 1;
-        const trueRemainingSeconds = remainingSeconds / playbackRate;
+        
+        let displayRate = video.playbackRate || 1.0;
+        
+        // If jumpcutter is ON, do not let its temporary speed boosts overwrite our base Custom Speed
+        // or cause the True Time predictions to wildly fluctuate.
+        if (currentSettings.skipSilence) {
+            displayRate = currentSettings.customSpeed || 1.0;
+        } else {
+            // If jumpcutter is OFF, sync with the native player controls
+            currentSettings.customSpeed = displayRate;
+        }
+
+        const trueRemainingSeconds = remainingSeconds / displayRate;
         
         const finishDate = new Date(Date.now() + trueRemainingSeconds * 1000);
         const finishTimeStr = formatFinishTime(finishDate);
         
         timeText.textContent = `True Time Left: ${formatTime(trueRemainingSeconds)} (Finish on ${finishTimeStr})`;
-        speedLabel.textContent = playbackRate.toFixed(2) + 'x';
-        currentSettings.customSpeed = playbackRate;
+        speedLabel.textContent = displayRate.toFixed(2) + 'x';
     };
 
     video.addEventListener('timeupdate', updateTrueTime);
