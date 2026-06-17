@@ -80,6 +80,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             if (typeof history[isoDate] !== 'number' || isNaN(history[isoDate])) history[isoDate] = 0;
 
+            // Auto-heal missing lecture category time by comparing against total daily history
+            const catTotal = dailyCat[isoDate].lectures + dailyCat[isoDate].notes + dailyCat[isoDate].dpps;
+            if (history[isoDate] > catTotal) {
+                const missing = history[isoDate] - catTotal;
+                dailyCat[isoDate].lectures += missing;
+                detailedTime.lectures += missing;
+            }
+
             // ALWAYS add Time Saved (never drops!)
             if (!dailySaved[isoDate]) dailySaved[isoDate] = { customSpeed: 0, jumpcutter: 0 };
             if (typeof dailySaved[isoDate].customSpeed !== 'number' || isNaN(dailySaved[isoDate].customSpeed)) dailySaved[isoDate].customSpeed = 0;
