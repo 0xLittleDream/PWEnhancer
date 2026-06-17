@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.get({
         showTrueTime: true,
         darkMode: false,
-        skipSilence: true, // Jumpcutter defaults to true in the minified bundle
+        skipSilence: false,
         customSpeed: 1.0,
         skipSilenceSpeed: 4.5
     }, (items) => {
@@ -86,6 +86,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (openAnalysisBtn) {
         openAnalysisBtn.addEventListener('click', () => {
             chrome.tabs.create({ url: chrome.runtime.getURL('analysis.html') });
+        });
+    }
+
+    // Load Today's Study Time
+    const displayEl = document.getElementById('study-time-display');
+    if (displayEl) {
+        chrome.storage.local.get({ dailyHistory: {} }, (res) => {
+            // Adjust to local ISO string
+            const offset = new Date().getTimezoneOffset() * 60000;
+            const todayIso = (new Date(Date.now() - offset)).toISOString().slice(0, 10);
+            
+            const seconds = res.dailyHistory[todayIso] || 0;
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            displayEl.textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
         });
     }
 });

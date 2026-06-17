@@ -103,6 +103,13 @@ function getLectureName() {
 
 // Load initial settings
 if (chrome && chrome.storage) {
+    // FORCE OFF JUMPCUTTER BY DEFAULT
+    chrome.storage.local.get(['skipSilence', 'enabled'], (res) => {
+        if (res.skipSilence === undefined || res.enabled === undefined) {
+            chrome.storage.local.set({ skipSilence: false, enabled: false });
+        }
+    });
+
     chrome.storage.local.get({
         showTrueTime: true,
         darkMode: false,
