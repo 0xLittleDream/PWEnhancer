@@ -709,10 +709,10 @@ if (video) {
             
             // Ignore massive jumps (seeking) larger than 10 seconds
             if (deltaV > 0 && deltaV < 10.0) {
-                const Sc = currentSettings.customSpeed || 1.0;
+                let Sc = currentSettings.skipSilence ? (currentSettings.customSpeed || 1.0) : (video.playbackRate || 1.0);
                 
                 let customSpeedSaved = deltaV - (deltaV / Sc);
-                let jumpcutterSaved = (deltaV / Sc) - deltaT;
+                let jumpcutterSaved = currentSettings.skipSilence ? ((deltaV / Sc) - deltaT) : 0;
                 
                 if (customSpeedSaved > 0) accumulatedCustomSaved += customSpeedSaved;
                 if (jumpcutterSaved > 0) accumulatedJumpSaved += jumpcutterSaved;
