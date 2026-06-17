@@ -105,7 +105,7 @@ function getLectureName() {
 if (chrome && chrome.storage) {
     // FORCE OFF JUMPCUTTER BY DEFAULT
     chrome.storage.local.get(['skipSilence', 'enabled'], (res) => {
-        if (res.skipSilence === undefined || res.enabled === undefined) {
+        if (res.skipSilence === undefined) {
             chrome.storage.local.set({ skipSilence: false, enabled: false });
         }
     });
@@ -134,6 +134,9 @@ if (chrome && chrome.storage) {
             }
             if (changes.skipSilence !== undefined) {
                 currentSettings.skipSilence = changes.skipSilence.newValue;
+                if (window.pwUpdateJumpBtnState) {
+                    window.pwUpdateJumpBtnState();
+                }
             }
             if (changes.customSpeed !== undefined) {
                 currentSettings.customSpeed = changes.customSpeed.newValue;
@@ -314,6 +317,7 @@ function injectTimer() {
             jumpBtn.style.color = '#F3F4F6'; // Gray
         }
     };
+    window.pwUpdateJumpBtnState = updateJumpBtnState;
     // Initialize color on load
     updateJumpBtnState();
 
@@ -325,21 +329,13 @@ function injectTimer() {
         const newState = !currentSettings.skipSilence;
         
         if (!newState) {
-            // Minified script cannot be cleanly stopped without reload
-            const confirmReload = confirm("Jumpcutter disabled. The page must reload to cleanly unload the audio engine. Reload now?");
-            if (!confirmReload) {
-                // User cancelled, keep it on
-                return;
-            }
+            showPwToast("Jumpcutter disabled! Please manually reload the page when you're ready.");
         }
         
         chrome.storage.local.set({ skipSilence: newState, enabled: newState }, () => {
             currentSettings.skipSilence = newState;
             updateJumpBtnState();
-            
-            if (!newState) {
-                window.location.reload();
-            } else {
+            if (newState) {
                 // Ensure default speeds are set when turning on
                 chrome.storage.local.get({ 
                     skipSilenceSpeed: 4.5, 
