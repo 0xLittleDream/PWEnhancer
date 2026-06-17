@@ -367,16 +367,22 @@ function injectTimer() {
             showPwToast("Jumpcutter soft-disabled! No reload required.");
             // Soft Disable Trick
             const speed = parseFloat(speedLabel.textContent) || 1.0;
-            chrome.storage.local.set({ 
-                skipSilence: false, 
-                enabled: true, 
-                volumeThreshold: 0.0,
-                silenceSpeedSpecificationMethod: "absolute",
-                silenceSpeedRaw: speed,
-                soundedSpeed: speed
-            }, () => {
-                currentSettings.skipSilence = false;
-                updateJumpBtnState();
+            chrome.storage.local.get({ volumeThreshold: 0.005 }, (items) => {
+                let safeThresh = items.volumeThreshold;
+                if (safeThresh === 0) safeThresh = 0.005; // recover from previous glitch
+                
+                chrome.storage.local.set({ 
+                    skipSilence: false, 
+                    enabled: true, 
+                    volumeThreshold: 0.0,
+                    savedVolumeThreshold: safeThresh, // Backup!
+                    silenceSpeedSpecificationMethod: "absolute",
+                    silenceSpeedRaw: speed,
+                    soundedSpeed: speed
+                }, () => {
+                    currentSettings.skipSilence = false;
+                    updateJumpBtnState();
+                });
             });
         } else {
             showPwToast("Jumpcutter enabled!");
@@ -388,10 +394,14 @@ function injectTimer() {
                     customSpeed: parseFloat(speedLabel.textContent) || 1.0,
                     marginBefore: 0.15,
                     marginAfter: 0.1,
-                    volumeThreshold: 0.005
+                    volumeThreshold: 0.005,
+                    savedVolumeThreshold: 0.005
                 }, (items) => {
+                    let restoreThresh = items.savedVolumeThreshold || items.volumeThreshold || 0.005;
+                    if (restoreThresh === 0) restoreThresh = 0.005; // recovery
+                    
                     chrome.storage.local.set({
-                        volumeThreshold: items.volumeThreshold,
+                        volumeThreshold: restoreThresh,
                         marginBefore: items.marginBefore,
                         marginAfter: items.marginAfter,
                         soundedSpeed: items.customSpeed,

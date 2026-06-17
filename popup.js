@@ -72,23 +72,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!newState) {
             // Soft Disable Trick
-            chrome.storage.local.set({ 
-                skipSilence: false, 
-                enabled: true, 
-                volumeThreshold: 0.0,
-                silenceSpeedSpecificationMethod: "absolute",
-                silenceSpeedRaw: speed,
-                soundedSpeed: speed
+            chrome.storage.local.get({ volumeThreshold: 0.005 }, (items) => {
+                let safeThresh = items.volumeThreshold;
+                if (safeThresh === 0) safeThresh = 0.005;
+                
+                chrome.storage.local.set({ 
+                    skipSilence: false, 
+                    enabled: true, 
+                    volumeThreshold: 0.0,
+                    savedVolumeThreshold: safeThresh,
+                    silenceSpeedSpecificationMethod: "absolute",
+                    silenceSpeedRaw: speed,
+                    soundedSpeed: speed
+                });
             });
         } else {
             // Enable Jumpcutter
-            chrome.storage.local.set({ 
-                skipSilence: true, 
-                enabled: true,
-                volumeThreshold: volumeThresh,
-                soundedSpeed: speed,
-                silenceSpeedSpecificationMethod: "absolute", 
-                silenceSpeedRaw: skipSpeed 
+            chrome.storage.local.get({ savedVolumeThreshold: 0.005 }, (items) => {
+                let restoreThresh = volumeThresh;
+                if (restoreThresh === 0) restoreThresh = items.savedVolumeThreshold || 0.005;
+                if (restoreThresh === 0) restoreThresh = 0.005; // Fallback
+                
+                chrome.storage.local.set({ 
+                    skipSilence: true, 
+                    enabled: true,
+                    volumeThreshold: restoreThresh,
+                    soundedSpeed: speed,
+                    silenceSpeedSpecificationMethod: "absolute", 
+                    silenceSpeedRaw: skipSpeed 
+                });
             });
         }
     });
