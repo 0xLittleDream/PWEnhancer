@@ -121,26 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 4. Update Daily Breakdown Bars
+            // 4. Update Daily Breakdown Stats
             const dayCat = res.dailyCategoryHistory[selectedIso] || { lectures: 0, dpps: 0, notes: 0 };
             const dayStudyTotal = (dayCat.lectures || 0) + (dayCat.dpps || 0) + (dayCat.notes || 0);
             
-            const updateBar = (id, value, total) => {
-                const barEl = document.getElementById(`bar-${id}`);
+            const updateStat = (id, value) => {
                 const valEl = document.getElementById(`val-${id}`);
-                if (barEl && valEl) {
+                if (valEl) {
                     valEl.textContent = formatTime(value);
-                    const percentage = total > 0 ? (value / total) * 100 : 0;
-                    barEl.style.width = (value > 0 && percentage < 2) ? '2%' : `${percentage}%`;
                 }
             };
 
-            updateBar('lectures', dayCat.lectures || 0, dayStudyTotal);
-            updateBar('dpps', dayCat.dpps || 0, dayStudyTotal);
-            updateBar('notes', dayCat.notes || 0, dayStudyTotal);
+            updateStat('lectures', dayCat.lectures || 0);
+            updateStat('dpps', dayCat.dpps || 0);
+            updateStat('notes', dayCat.notes || 0);
             document.getElementById('stat-total-study').textContent = formatTime(dayStudyTotal);
 
-            // 5. Update Efficiency Bars
+            // 5. Update Efficiency Stats
             let effSpeed = 0, effJump = 0, effTotal = 0;
             if (isAllTimeSaved) {
                 document.getElementById('saved-total-label').textContent = "Total Efficiency Bonus (All Time):";
@@ -154,8 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 effJump = daySaved.jumpcutter || 0;
                 effTotal = effSpeed + effJump;
             }
-            updateBar('speed', effSpeed, effTotal);
-            updateBar('jump', effJump, effTotal);
+            updateStat('speed', effSpeed);
+            updateStat('jump', effJump);
             document.getElementById('stat-total-saved').textContent = formatTime(effTotal);
 
             // 6. Render Monthly Calendar
