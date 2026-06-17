@@ -1,0 +1,2 @@
+/*! For license information please see 577.js.LICENSE.txt */
+"use strict";(self.webpackChunkjump_cutter=self.webpackChunkjump_cutter||[]).push([[577],{6577:(e,t,n)=>{function s(e,t){const n=["pause","waiting","emptied"];for(const s of n)e.addEventListener(s,t,{passive:!0});return()=>{for(const s of n)e.removeEventListener(s,t)}}function r(e,t){return e.addEventListener("playing",t,{passive:!0}),()=>{e.removeEventListener("playing",t)}}function i(e){return!e.seeking&&e.readyState>=HTMLMediaElement.HAVE_FUTURE_DATA&&!e.paused}n.d(t,{P7:()=>s,c0:()=>i,gg:()=>r})}}]);

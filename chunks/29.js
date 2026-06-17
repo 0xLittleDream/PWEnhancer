@@ -1,0 +1,2 @@
+/*! For license information please see 29.js.LICENSE.txt */
+"use strict";(self.webpackChunkjump_cutter=self.webpackChunkjump_cutter||[]).push([[29],{7029:(u,t,e)=>{function c(u){const t=1.002,e=.998;return e<u&&u<t?t-u<u-e?e:t:u}e.d(t,{J:()=>c})}}]);

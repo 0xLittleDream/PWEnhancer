@@ -1,0 +1,2 @@
+/*! For license information please see 730.js.LICENSE.txt */
+"use strict";(self.webpackChunkjump_cutter=self.webpackChunkjump_cutter||[]).push([[730],{9730:(e,u,t)=>{t.d(u,{getGeckoMajorVersion:()=>c.P});var c=t(8623)}}]);

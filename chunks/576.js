@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkjump_cutter=self.webpackChunkjump_cutter||[]).push([[576],{9576:(e,d,u)=>{function t(e){return e.timeSavedComparedToSoundedSpeed/(e.wouldHaveLastedIfSpeedWasSounded||Number.MIN_VALUE)}function n(e){return e.timeSavedComparedToIntrinsicSpeed/(e.wouldHaveLastedIfSpeedWasIntrinsic||Number.MIN_VALUE)}u.d(d,{K:()=>t,d:()=>n})}}]);

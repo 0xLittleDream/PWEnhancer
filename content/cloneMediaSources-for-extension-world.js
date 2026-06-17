@@ -1,0 +1,2 @@
+/*! For license information please see cloneMediaSources-for-extension-world.js.LICENSE.txt */
+(()=>{"use strict";const e="undefined"!=typeof browser?browser:chrome,t="__jumpCutterBridgeElement";!function(){const e=document.createElement("div");e.id=t,(document.body||document.documentElement).append(e),globalThis[t]=e}();const n=document.createElement("script");n.src=e.runtime.getURL("content/cloneMediaSources-for-page-world.js"),n.onload=()=>n.remove(),(document.head||document.documentElement).prepend(n)})();

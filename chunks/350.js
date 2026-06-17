@@ -1,0 +1,1 @@
+(self.webpackChunkjump_cutter=self.webpackChunkjump_cutter||[]).push([[350],{7350:(n,e,i)=>{var t=i(8221),r=i(3805);n.exports=function(n,e,i){var a=!0,u=!0;if("function"!=typeof n)throw new TypeError("Expected a function");return r(i)&&(a="leading"in i?!!i.leading:a,u="trailing"in i?!!i.trailing:u),t(n,e,{leading:a,maxWait:e,trailing:u})}}}]);
