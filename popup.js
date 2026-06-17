@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const skipSilenceToggle = document.getElementById('skip-silence');
     const speedDropdown = document.getElementById('speed-dropdown');
     const skipSpeedDropdown = document.getElementById('skip-speed-dropdown');
+    const volumeThresholdInput = document.getElementById('volume-threshold');
 
     // Load saved settings
     chrome.storage.local.get({

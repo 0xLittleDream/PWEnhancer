@@ -101,6 +101,41 @@ function getLectureName() {
     return name || "PW_Lecture";
 }
 
+const SPEED_STEP = 0.25;
+
+function showPwToast(message) {
+    let toast = document.getElementById('pw-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pw-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #EF4444;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 999999;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    
+    // Auto hide
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 3000);
+}
+
 // Load initial settings
 if (chrome && chrome.storage) {
     // FORCE OFF JUMPCUTTER BY DEFAULT
