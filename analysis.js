@@ -1,18 +1,20 @@
 // Chart.js Default Configurations for Dark Theme
-Chart.defaults.color = '#94a3b8';
+Chart.defaults.color = '#a1a1aa';
 Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 17, 23, 0.9)';
-Chart.defaults.plugins.tooltip.titleColor = '#f8fafc';
-Chart.defaults.plugins.tooltip.bodyColor = '#f8fafc';
-Chart.defaults.plugins.tooltip.borderColor = '#334155';
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(9, 9, 11, 0.9)';
+Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
+Chart.defaults.plugins.tooltip.bodyColor = '#ffffff';
+Chart.defaults.plugins.tooltip.borderColor = '#27272a';
 Chart.defaults.plugins.tooltip.borderWidth = 1;
 Chart.defaults.plugins.tooltip.padding = 12;
 Chart.defaults.plugins.tooltip.cornerRadius = 8;
 Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
 Chart.defaults.scale.grid.borderColor = 'transparent';
 
-// Global Chart Instances
-let todayChart, categoryChart, savedChart;
+let timelineChart;
+let selectedDate = new Date();
+let selectedMonth = new Date();
+let isAllTimeSaved = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     function formatTime(totalSeconds) {
@@ -23,7 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${m}m`;
     }
 
-    function renderCharts() {
+    function getIso(dateObj) {
+        // adjust for timezone to get local YYYY-MM-DD
+        const offset = dateObj.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(dateObj - offset)).toISOString().slice(0, 10);
+        return localISOTime;
+    }
+
+    function isSameDay(d1, d2) {
+        return d1.getFullYear() === d2.getFullYear() &&
+               d1.getMonth() === d2.getMonth() &&
+               d1.getDate() === d2.getDate();
+    }
+
+    function renderUI() {
         chrome.storage.local.get({
             detailedStudyTime: { lectures: 0, notes: 0, dpps: 0 },
             detailedTimeSaved: { customSpeed: 0, jumpcutter: 0 },
@@ -32,45 +47,40 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyCategoryHistory: {},
             dailySavedHistory: {}
         }, (res) => {
-            const now = new Date();
-            const todayIso = now.toISOString().split('T')[0];
+            const today = new Date();
+            const selectedIso = getIso(selectedDate);
+            
+            // 1. Grand Total Header
+            const grandTotalSaved = (res.detailedTimeSaved.customSpeed || 0) + (res.detailedTimeSaved.jumpcutter || 0);
+            document.getElementById('grand-total-saved').textContent = formatTime(grandTotalSaved);
 
-            // 1. Update Grand Totals
-            const totalStudy = (res.detailedStudyTime.lectures || 0) + (res.detailedStudyTime.notes || 0) + (res.detailedStudyTime.dpps || 0);
-            const totalSaved = (res.detailedTimeSaved.customSpeed || 0) + (res.detailedTimeSaved.jumpcutter || 0);
-            document.getElementById('grand-total-saved').textContent = formatTime(totalSaved);
-            document.getElementById('stat-total-study').textContent = formatTime(totalStudy);
-            document.getElementById('stat-total-saved').textContent = formatTime(totalSaved);
-
-            // 2. Prepare 7-Day Labels
-            const last7Days = [];
-            const last7Dates = [];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                last7Days.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
-                last7Dates.push(d.toISOString().split('T')[0]);
+            // 2. Day Picker Label
+            const dayLabelEl = document.getElementById('current-day-label');
+            if (isSameDay(selectedDate, today)) {
+                dayLabelEl.textContent = "Today";
+            } else {
+                dayLabelEl.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
             }
 
-            // 3. Render Today's Timeline Chart
-            const todayHourly = res.hourlyHistory[todayIso] || {};
+            // 3. Render 24-hour Graph
+            const hourly = res.hourlyHistory[selectedIso] || {};
             const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
-            const hourData = Array.from({length: 24}, (_, i) => (todayHourly[i.toString()] || 0) / 60); // in minutes
+            const hourData = Array.from({length: 24}, (_, i) => (hourly[i.toString()] || 0) / 60); // minutes
 
-            if (todayChart) todayChart.destroy();
-            todayChart = new Chart(document.getElementById('todayTimelineChart'), {
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(document.getElementById('dailyTimelineChart'), {
                 type: 'line',
                 data: {
                     labels: hours,
                     datasets: [{
                         label: 'Study Minutes',
                         data: hourData,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: '#ffffff',
                         pointRadius: 0,
                         pointHoverRadius: 6
                     }]
@@ -82,10 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         y: { 
                             beginAtZero: true, 
                             suggestedMax: 60,
-                            ticks: {
-                                stepSize: 10,
-                                callback: function(value) { return value + 'm'; }
-                            }
+                            ticks: { stepSize: 10, callback: function(value) { return value + 'm'; } }
                         }
                     },
                     plugins: {
@@ -95,76 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 4. Render Category Trend Chart
-            const catData = {
-                lectures: last7Dates.map(d => ((res.dailyCategoryHistory[d] || {}).lectures || 0) / 3600), // in hours
-                dpps: last7Dates.map(d => ((res.dailyCategoryHistory[d] || {}).dpps || 0) / 3600),
-                notes: last7Dates.map(d => ((res.dailyCategoryHistory[d] || {}).notes || 0) / 3600)
-            };
-
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryTrendChart'), {
-                type: 'line',
-                data: {
-                    labels: last7Days,
-                    datasets: [
-                        { label: 'Lectures', data: catData.lectures, borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.4 },
-                        { label: 'DPPs', data: catData.dpps, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', tension: 0.4 },
-                        { label: 'Notes', data: catData.notes, borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.4 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            suggestedMax: 2,
-                            ticks: { stepSize: 1, callback: function(value) { return value + 'h'; } }
-                        } 
-                    },
-                    plugins: {
-                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(1)}h` } }
-                    }
-                }
-            });
-
-            // 5. Render Time Saved Chart
-            const savedData = {
-                custom: last7Dates.map(d => ((res.dailySavedHistory[d] || {}).customSpeed || 0) / 3600),
-                jump: last7Dates.map(d => ((res.dailySavedHistory[d] || {}).jumpcutter || 0) / 3600)
-            };
-
-            if (savedChart) savedChart.destroy();
-            savedChart = new Chart(document.getElementById('savedTrendChart'), {
-                type: 'bar',
-                data: {
-                    labels: last7Days,
-                    datasets: [
-                        { label: 'Saved by Custom Speed', data: savedData.custom, backgroundColor: '#f59e0b', borderRadius: 4 },
-                        { label: 'Saved by Jumpcutter', data: savedData.jump, backgroundColor: '#ef4444', borderRadius: 4 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { 
-                            stacked: true, 
-                            beginAtZero: true, 
-                            suggestedMax: 2,
-                            ticks: { stepSize: 1, callback: function(value) { return value + 'h'; } }
-                        }
-                    },
-                    plugins: {
-                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(1)}h` } }
-                    }
-                }
-            });
-
-            // 6. Update Summary Bars (All-Time Data)
+            // 4. Update Daily Breakdown Bars
+            const dayCat = res.dailyCategoryHistory[selectedIso] || { lectures: 0, dpps: 0, notes: 0 };
+            const dayStudyTotal = (dayCat.lectures || 0) + (dayCat.dpps || 0) + (dayCat.notes || 0);
+            
             const updateBar = (id, value, total) => {
                 const barEl = document.getElementById(`bar-${id}`);
                 const valEl = document.getElementById(`val-${id}`);
@@ -175,68 +116,130 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            updateBar('lectures', res.detailedStudyTime.lectures || 0, totalStudy);
-            updateBar('dpps', res.detailedStudyTime.dpps || 0, totalStudy);
-            updateBar('notes', res.detailedStudyTime.notes || 0, totalStudy);
+            updateBar('lectures', dayCat.lectures || 0, dayStudyTotal);
+            updateBar('dpps', dayCat.dpps || 0, dayStudyTotal);
+            updateBar('notes', dayCat.notes || 0, dayStudyTotal);
+            document.getElementById('stat-total-study').textContent = formatTime(dayStudyTotal);
 
-            updateBar('speed', res.detailedTimeSaved.customSpeed || 0, totalSaved);
-            updateBar('jump', res.detailedTimeSaved.jumpcutter || 0, totalSaved);
+            // 5. Update Efficiency Bars
+            let effSpeed = 0, effJump = 0, effTotal = 0;
+            if (isAllTimeSaved) {
+                document.getElementById('saved-total-label').textContent = "Total Efficiency Bonus (All Time):";
+                effSpeed = res.detailedTimeSaved.customSpeed || 0;
+                effJump = res.detailedTimeSaved.jumpcutter || 0;
+                effTotal = grandTotalSaved;
+            } else {
+                const daySaved = res.dailySavedHistory[selectedIso] || { customSpeed: 0, jumpcutter: 0 };
+                document.getElementById('saved-total-label').textContent = "Total Efficiency Bonus (Selected Day):";
+                effSpeed = daySaved.customSpeed || 0;
+                effJump = daySaved.jumpcutter || 0;
+                effTotal = effSpeed + effJump;
+            }
+            updateBar('speed', effSpeed, effTotal);
+            updateBar('jump', effJump, effTotal);
+            document.getElementById('stat-total-saved').textContent = formatTime(effTotal);
 
-            // 7. Render Heatmap Calendar
-            renderHeatmap(res.dailyHistory);
+            // 6. Render Monthly Calendar
+            document.getElementById('current-month-label').textContent = selectedMonth.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            
+            const calGrid = document.querySelector('.calendar-grid');
+            // Remove old cells, keep headers
+            const headers = Array.from(calGrid.querySelectorAll('.cal-header'));
+            calGrid.innerHTML = '';
+            headers.forEach(h => calGrid.appendChild(h));
+
+            const year = selectedMonth.getFullYear();
+            const month = selectedMonth.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Adjust day so Monday is 0, Sunday is 6
+            let startOffset = firstDay.getDay() - 1;
+            if (startOffset === -1) startOffset = 6; 
+
+            // Find max for scaling
+            const allValues = Object.values(res.dailyHistory).filter(v => typeof v === 'number');
+            const maxSeconds = allValues.length > 0 ? Math.max(...allValues) : 3600;
+
+            // Empty slots for start
+            for (let i = 0; i < startOffset; i++) {
+                const empty = document.createElement('div');
+                calGrid.appendChild(empty);
+            }
+
+            // Days
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const cellDate = new Date(year, month, i);
+                const iso = getIso(cellDate);
+                const seconds = res.dailyHistory[iso] || 0;
+
+                let level = 0;
+                if (seconds > 0) {
+                    const ratio = seconds / maxSeconds;
+                    if (ratio > 0.75) level = 4;
+                    else if (ratio > 0.5) level = 3;
+                    else if (ratio > 0.25) level = 2;
+                    else level = 1;
+                }
+
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell';
+                if (isSameDay(cellDate, today)) cell.classList.add('today');
+                if (level > 0) cell.classList.add(`heat-${level}`);
+
+                const timeHtml = seconds > 0 ? `<div class="cal-time">⏱ ${formatTime(seconds)}</div>` : '';
+
+                cell.innerHTML = `
+                    <div class="cal-date">${i}</div>
+                    ${timeHtml}
+                `;
+                calGrid.appendChild(cell);
+            }
         });
     }
 
-    function renderHeatmap(historyObj) {
-        const container = document.getElementById('heatmap-container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        // Generate exactly 182 days (26 weeks * 7 days) to fill the grid perfectly
-        const daysToRender = 182;
-        
-        // Find max study day to calculate intensity levels
-        const values = Object.values(historyObj).filter(v => typeof v === 'number');
-        const maxSeconds = values.length > 0 ? Math.max(...values) : 3600;
-
-        // Ensure we append them chronologically so the grid flows left to right
-        for (let i = daysToRender - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const iso = d.toISOString().split('T')[0];
-            const seconds = historyObj[iso] || 0;
-
-            // Calculate level 0-4
-            let level = 0;
-            if (seconds > 0) {
-                const ratio = seconds / maxSeconds;
-                if (ratio > 0.75) level = 4;
-                else if (ratio > 0.5) level = 3;
-                else if (ratio > 0.25) level = 2;
-                else level = 1;
-            }
-
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'heatmap-day';
-            dayDiv.setAttribute('data-level', level);
-            
-            dayDiv.innerHTML = `
-                <div class="heatmap-tooltip">
-                    ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}<br>
-                    ${formatTime(seconds)} studied
-                </div>
-            `;
-            container.appendChild(dayDiv);
+    // Listeners
+    document.getElementById('prev-day').addEventListener('click', () => {
+        selectedDate.setDate(selectedDate.getDate() - 1);
+        renderUI();
+    });
+    document.getElementById('next-day').addEventListener('click', () => {
+        const today = new Date();
+        if (selectedDate < today) {
+            selectedDate.setDate(selectedDate.getDate() + 1);
+            renderUI();
         }
-    }
+    });
+
+    document.getElementById('toggle-daily').addEventListener('click', (e) => {
+        isAllTimeSaved = false;
+        e.target.classList.add('active');
+        document.getElementById('toggle-alltime').classList.remove('active');
+        renderUI();
+    });
+    document.getElementById('toggle-alltime').addEventListener('click', (e) => {
+        isAllTimeSaved = true;
+        e.target.classList.add('active');
+        document.getElementById('toggle-daily').classList.remove('active');
+        renderUI();
+    });
+
+    document.getElementById('prev-month').addEventListener('click', () => {
+        selectedMonth.setMonth(selectedMonth.getMonth() - 1);
+        renderUI();
+    });
+    document.getElementById('next-month').addEventListener('click', () => {
+        selectedMonth.setMonth(selectedMonth.getMonth() + 1);
+        renderUI();
+    });
 
     // Initial load
-    renderCharts();
+    renderUI();
 
     // Re-render when storage changes
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local') {
-            renderCharts();
+            renderUI();
         }
     });
 });
