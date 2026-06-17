@@ -772,13 +772,20 @@ function initTimeSavedTracker() {
             
             // Ignore massive jumps (seeking) larger than 10 seconds
             if (deltaV > 0 && deltaV < 10.0) {
-                let Sc = currentSettings.skipSilence ? (currentSettings.customSpeed || 1.0) : (video.playbackRate || 1.0);
+                const actualRate = video.playbackRate || 1.0;
+                const baseRate = currentSettings.customSpeed || 1.0;
                 
-                let customSpeedSaved = deltaV - (deltaV / Sc);
-                let jumpcutterSaved = currentSettings.skipSilence ? ((deltaV / Sc) - deltaT) : 0;
+                // deltaV - (deltaV / actualRate) mathematically perfectly matches (time elapsed - real time spent)
+                // It is immune to JS jitter compared to using deltaT.
+                let saved = deltaV - (deltaV / actualRate);
                 
-                if (customSpeedSaved > 0) accumulatedCustomSaved += customSpeedSaved;
-                if (jumpcutterSaved > 0) accumulatedJumpSaved += jumpcutterSaved;
+                // If jumpcutter is ON and actively skipping silence (speed is significantly higher than base custom speed)
+                if (currentSettings.skipSilence && actualRate > baseRate + 0.1) {
+                    if (saved > 0) accumulatedJumpSaved += saved;
+                } else {
+                    // Otherwise, the savings (if any) are from the standard custom speed
+                    if (saved > 0) accumulatedCustomSaved += saved;
+                }
             }
         }
         
